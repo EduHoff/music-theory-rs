@@ -1,0 +1,90 @@
+import { Button, VerticalBox, HorizontalBox } from "std-widgets.slint";
+import { ScaleView, ScaleNoteItem } from "views/scale_view.slint";
+
+export component AppWindow inherits Window {
+    title: "Music Theory RS";
+    preferred-width: 850px;
+    preferred-height: 500px;
+    background: #18181b;
+
+    in-out property <string> current-view: "scales";
+
+    in-out property <[string]> available-roots: [
+        "C", "G", "D", "A", "E", "B", "F#", "C#",
+        "F", "Bb", "Eb", "Ab", "Db", "Gb", "Cb"
+    ];
+    in-out property <[string]> available-scales: [
+        "Natural Major",
+        "Natural Minor",
+        "Harmonic Minor"
+    ];
+    in-out property <string> selected-root: "C";
+    in-out property <int> selected-scale-idx: 0;
+    in-out property <[ScaleNoteItem]> scale-notes: [];
+
+    callback update-scale();
+    callback change-view(string);
+
+    VerticalBox {
+        padding: 24px;
+        spacing: 20px;
+
+        HorizontalBox {
+            spacing: 12px;
+            alignment: start;
+
+            Rectangle {
+                width: 140px;
+                height: 36px;
+                Button {
+                    width: 140px;
+                    height: 36px;
+                    text: "Scales Explorer";
+                    clicked => { root.change-view("scales"); }
+                }
+            }
+
+            Rectangle {
+                width: 160px;
+                height: 36px;
+                Button {
+                    width: 160px;
+                    height: 36px;
+                    text: "Circle of Fifths";
+                    clicked => { root.change-view("circle"); }
+                }
+            }
+        }
+
+        Rectangle {
+            height: 1px;
+            background: #27272a;
+        }
+
+        if root.current-view == "scales": ScaleView {
+            available-roots: root.available-roots;
+            available-scales: root.available-scales;
+            selected-root <=> root.selected-root;
+            selected-scale-idx <=> root.selected-scale-idx;
+            scale-notes: root.scale-notes;
+            update-scale => { root.update-scale(); }
+        }
+
+        if root.current-view == "circle": VerticalBox {
+            alignment: center;
+            spacing: 10px;
+            Text {
+                text: "Circle of Fifths/Fourths Module";
+                color: #f4f4f5;
+                font-size: 20px;
+                horizontal-alignment: center;
+            }
+            Text {
+                text: "Module under development...";
+                color: #71717a;
+                font-size: 14px;
+                horizontal-alignment: center;
+            }
+        }
+    }
+}

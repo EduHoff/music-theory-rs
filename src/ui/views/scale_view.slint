@@ -1,0 +1,68 @@
+import { ComboBox, VerticalBox, HorizontalBox } from "std-widgets.slint";
+import { ScaleCard } from "../components/scale_card.slint";
+
+export struct ScaleNoteItem {
+    degree: string,
+    note: string,
+}
+
+export component ScaleView inherits VerticalBox {
+    in-out property <[string]> available-roots: [
+        "C", "G", "D", "A", "E", "B", "F#", "C#",
+        "F", "Bb", "Eb", "Ab", "Db", "Gb", "Cb"
+    ];
+    in-out property <[string]> available-scales: [
+        "Major / Ionian",
+        "Natural Minor",
+        "Harmonic Minor"
+    ];
+    in-out property <string> selected-root: "C";
+    in-out property <int> selected-scale-idx: 0;
+    in-out property <[ScaleNoteItem]> scale-notes: [];
+
+    callback update-scale();
+
+    spacing: 20px;
+
+    Text {
+        text: "Scale & Mode Explorer";
+        color: #f4f4f5;
+        font-size: 22px;
+        font-weight: 700;
+    }
+
+    HorizontalBox {
+        spacing: 16px;
+        alignment: start;
+
+        VerticalBox {
+            spacing: 4px;
+            Text { text: "Root Note"; color: #a1a1aa; font-size: 12px; }
+            ComboBox {
+                model: root.available-roots;
+                current-value <=> root.selected-root;
+                selected => { root.update-scale(); }
+            }
+        }
+
+        VerticalBox {
+            spacing: 4px;
+            Text { text: "Scale Type"; color: #a1a1aa; font-size: 12px; }
+            ComboBox {
+                model: root.available-scales;
+                current-index <=> root.selected-scale-idx;
+                selected => { root.update-scale(); }
+            }
+        }
+    }
+
+    HorizontalBox {
+        spacing: 12px;
+        alignment: start;
+
+        for item in root.scale-notes: ScaleCard {
+            degree: item.degree;
+            note: item.note;
+        }
+    }
+}
