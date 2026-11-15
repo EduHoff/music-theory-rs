@@ -7,15 +7,8 @@ export struct ScaleNoteItem {
 }
 
 export component ScaleView inherits VerticalBox {
-    in-out property <[string]> available-roots: [
-        "C", "G", "D", "A", "E", "B", "F#", "C#",
-        "F", "Bb", "Eb", "Ab", "Db", "Gb", "Cb"
-    ];
-    in-out property <[string]> available-scales: [
-        "Major / Ionian",
-        "Natural Minor",
-        "Harmonic Minor"
-    ];
+    in-out property <[string]> available-roots: [];
+    in-out property <[string]> available-scales: [];
     in-out property <string> selected-root: "C";
     in-out property <int> selected-scale-idx: 0;
     in-out property <[ScaleNoteItem]> scale-notes: [];
@@ -32,26 +25,36 @@ export component ScaleView inherits VerticalBox {
     }
 
     HorizontalBox {
-        spacing: 16px;
+        spacing: 50px;
         alignment: start;
 
-        VerticalBox {
-            spacing: 4px;
-            Text { text: "Root Note"; color: #a1a1aa; font-size: 12px; }
-            ComboBox {
-                model: root.available-roots;
-                current-value <=> root.selected-root;
-                selected => { root.update-scale(); }
+        Rectangle {
+            width: 130px;
+            height: 55px;
+            VerticalBox {
+                spacing: 4px;
+                padding: 0px;
+                Text { text: "Root Note"; color: #a1a1aa; font-size: 12px; }
+                ComboBox {
+                    model: root.available-roots;
+                    current-value <=> root.selected-root;
+                    selected => { root.update-scale(); }
+                }
             }
         }
 
-        VerticalBox {
-            spacing: 4px;
-            Text { text: "Scale Type"; color: #a1a1aa; font-size: 12px; }
-            ComboBox {
-                model: root.available-scales;
-                current-index <=> root.selected-scale-idx;
-                selected => { root.update-scale(); }
+        Rectangle {
+            width: 200px;
+            height: 55px;
+            VerticalBox {
+                spacing: 4px;
+                padding: 0px;
+                Text { text: "Scale Type"; color: #a1a1aa; font-size: 12px; }
+                ComboBox {
+                    model: root.available-scales;
+                    current-index <=> root.selected-scale-idx;
+                    selected => { root.update-scale(); }
+                }
             }
         }
     }

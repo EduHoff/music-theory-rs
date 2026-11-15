@@ -13,11 +13,7 @@ export component AppWindow inherits Window {
         "C", "G", "D", "A", "E", "B", "F#", "C#",
         "F", "Bb", "Eb", "Ab", "Db", "Gb", "Cb"
     ];
-    in-out property <[string]> available-scales: [
-        "Natural Major",
-        "Natural Minor",
-        "Harmonic Minor"
-    ];
+    in-out property <[string]> available-scales: [];
     in-out property <string> selected-root: "C";
     in-out property <int> selected-scale-idx: 0;
     in-out property <[ScaleNoteItem]> scale-notes: [];
@@ -50,7 +46,7 @@ export component AppWindow inherits Window {
                 Button {
                     width: 160px;
                     height: 36px;
-                    text: "Circle of Fifths";
+                    text: "Circle of Fifths/Fourths";
                     clicked => { root.change-view("circle"); }
                 }
             }
