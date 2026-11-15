@@ -6,6 +6,21 @@ pub enum ScaleType {
     NaturalMajor,
     NaturalMinor,
     HarmonicMinor,
+    HarmonicMajor,
+    MelodicMinor,
+    MelodicMajor,
+    Dorian,
+    Phrygian,
+    Lydian,
+    Mixolydian,
+    Locrian,
+    WholeTone,
+    Arabic,
+    Diminished,
+    MajorPentatonic,
+    MinorPentatonic,
+    Blues,
+    Hirajoshi,
 }
 
 impl ScaleType {
@@ -14,23 +29,68 @@ impl ScaleType {
         ScaleType::NaturalMajor,
         ScaleType::NaturalMinor,
         ScaleType::HarmonicMinor,
+        ScaleType::HarmonicMajor,
+        ScaleType::MelodicMinor,
+        ScaleType::MelodicMajor,
+        ScaleType::Dorian,
+        ScaleType::Phrygian,
+        ScaleType::Lydian,
+        ScaleType::Mixolydian,
+        ScaleType::Locrian,
+        ScaleType::WholeTone,
+        ScaleType::Arabic,
+        ScaleType::Diminished,
+        ScaleType::MajorPentatonic,
+        ScaleType::MinorPentatonic,
+        ScaleType::Blues,
+        ScaleType::Hirajoshi,
     ];
 
     pub const fn name(&self) -> &'static str {
         match self {
             ScaleType::Chromatic => "Chromatic",
-            ScaleType::NaturalMajor => "Natural Major",
-            ScaleType::NaturalMinor => "Natural Minor",
+            ScaleType::NaturalMajor => "Natural Major / Ionian",
+            ScaleType::NaturalMinor => "Natural Minor / Aeolian",
             ScaleType::HarmonicMinor => "Harmonic Minor",
+            ScaleType::HarmonicMajor => "Harmonic Major",
+            ScaleType::MelodicMinor => "Melodic Minor",
+            ScaleType::MelodicMajor => "Melodic Major",
+            ScaleType::Dorian => "Dorian",
+            ScaleType::Phrygian => "Phrygian",
+            ScaleType::Lydian => "Lydian",
+            ScaleType::Mixolydian => "Mixolydian",
+            ScaleType::Locrian => "Locrian",
+            ScaleType::WholeTone => "Whole Tone",
+            ScaleType::Arabic => "Arabic (Double Harmonic)",
+            ScaleType::Diminished => "Diminished (H-W)",
+            ScaleType::MajorPentatonic => "Major Pentatonic",
+            ScaleType::MinorPentatonic => "Minor Pentatonic",
+            ScaleType::Blues => "Blues Scale",
+            ScaleType::Hirajoshi => "Hirajoshi",
         }
     }
 
     pub const fn intervals(&self) -> &'static [u8] {
         match self {
-            ScaleType::Chromatic => &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+            ScaleType::Chromatic => &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
             ScaleType::NaturalMajor => &[0, 2, 4, 5, 7, 9, 11],
             ScaleType::NaturalMinor => &[0, 2, 3, 5, 7, 8, 10],
             ScaleType::HarmonicMinor => &[0, 2, 3, 5, 7, 8, 11],
+            ScaleType::HarmonicMajor => &[0, 2, 4, 5, 7, 8, 11],
+            ScaleType::MelodicMinor => &[0, 2, 3, 5, 7, 9, 11],
+            ScaleType::MelodicMajor => &[0, 2, 4, 5, 7, 8, 11],
+            ScaleType::Dorian => &[0, 2, 3, 5, 7, 9, 10],
+            ScaleType::Phrygian => &[0, 1, 3, 5, 7, 8, 10],
+            ScaleType::Lydian => &[0, 2, 4, 6, 7, 9, 11],
+            ScaleType::Mixolydian => &[0, 2, 4, 5, 7, 9, 10],
+            ScaleType::Locrian => &[0, 1, 3, 5, 6, 8, 10],
+            ScaleType::WholeTone => &[0, 2, 4, 6, 8, 10],
+            ScaleType::Arabic => &[0, 1, 4, 5, 7, 8, 11],
+            ScaleType::Diminished => &[0, 2, 3, 5, 6, 8, 9, 11],
+            ScaleType::MajorPentatonic => &[0, 2, 4, 7, 9],
+            ScaleType::MinorPentatonic => &[0, 3, 5, 7, 10],
+            ScaleType::Blues => &[0, 3, 5, 6, 7, 10],
+            ScaleType::Hirajoshi => &[0, 2, 3, 7, 8],
         }
     }
 
@@ -74,8 +134,7 @@ impl Scale {
                     _ => (super::note::Letter::C, 0),
                 };
 
-                let final_acc = if interval == 12 { root.accidental } else { acc };
-                notes.push(Note::new(letter, final_acc));
+                notes.push(Note::new(letter, acc));
             }
         } else {
             for (step, &interval) in intervals.iter().enumerate() {

@@ -5,8 +5,8 @@ use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
 use std::rc::Rc;
 
 const ROMAN_DEGREES: [&str; 7] = ["I", "II", "III", "IV", "V", "VI", "VII"];
-const CHROMATIC_DEGREES: [&str; 13] = [
-    "P1", "m2", "M2", "m3", "M3", "P4", "trit", "P5", "m6", "M6", "m7", "M7", "P8",
+const CHROMATIC_DEGREES: [&str; 12] = [
+    "P1", "m2", "M2", "m3", "M3", "P4", "trit", "P5", "m6", "M6", "m7", "M7",
 ];
 
 fn format_chromatic_note(note_str: &str) -> String {
@@ -54,8 +54,20 @@ pub fn setup(ui: &AppWindow) {
             .map(|(i, note)| {
                 let degree = if scale_type == ScaleType::Chromatic {
                     CHROMATIC_DEGREES.get(i).copied().unwrap_or("-")
-                } else {
+                } else if generated.notes.len() == 7 {
                     ROMAN_DEGREES.get(i).copied().unwrap_or("-")
+                } else {
+                    match i {
+                        0 => "1st",
+                        1 => "2nd",
+                        2 => "3rd",
+                        3 => "4th",
+                        4 => "5th",
+                        5 => "6th",
+                        6 => "7th",
+                        7 => "8th",
+                        _ => "-",
+                    }
                 };
 
                 let note_text = if scale_type == ScaleType::Chromatic {
