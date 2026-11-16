@@ -2670,8 +2670,10 @@ dependencies = [
 name = "music-theory-rs"
 version = "0.1.0"
 dependencies = [
+ "js-sys",
  "slint",
  "slint-build",
+ "wasm-bindgen",
 ]
 
 [[package]]

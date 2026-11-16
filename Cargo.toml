@@ -4,8 +4,21 @@ version = "0.1.0"
 edition = "2024"
 license = "AGPL-3.0-or-later"
 
+[lib]
+name = "music_theory_rs"
+crate-type = ["lib", "cdylib"]
+
+[[bin]]
+name = "music-theory-rs-desktop"
+path = "src/main.rs"
+
 [dependencies]
 slint = "1.18.1"
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+wasm-bindgen = { version = "0.2" }
+js-sys = { version = "0.3" }
+slint = { version = "1.18.1", features = ["backend-winit", "renderer-femtovg"] }
 
 [build-dependencies]
 slint-build = "1.18.1"
