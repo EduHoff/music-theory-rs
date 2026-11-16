@@ -1,10 +1,12 @@
 import { Button, VerticalBox, HorizontalBox } from "std-widgets.slint";
-import { ScaleView, ScaleNoteItem } from "views/scale_view.slint";
+import { ScaleView, ScaleNoteItem, ScaleRowItem } from "views/scale_view.slint";
 
 export component AppWindow inherits Window {
     title: "Music Theory RS";
-    preferred-width: 850px;
-    preferred-height: 500px;
+    preferred-width: 900px;
+    preferred-height: 600px;
+    min-width: 700px;
+    min-height: 450px;
     background: #18181b;
 
     in-out property <string> current-view: "scales";
@@ -17,6 +19,9 @@ export component AppWindow inherits Window {
     in-out property <string> selected-root: "C";
     in-out property <int> selected-scale-idx: 0;
     in-out property <[ScaleNoteItem]> scale-notes: [];
+    
+    in-out property <bool> is-all-roots-mode: false;
+    in-out property <[ScaleRowItem]> all-scale-rows: [];
 
     callback update-scale();
     callback change-view(string);
@@ -63,6 +68,8 @@ export component AppWindow inherits Window {
             selected-root <=> root.selected-root;
             selected-scale-idx <=> root.selected-scale-idx;
             scale-notes: root.scale-notes;
+            is-all-roots-mode <=> root.is-all-roots-mode;
+            all-scale-rows <=> root.all-scale-rows;
             update-scale => { root.update-scale(); }
         }
 

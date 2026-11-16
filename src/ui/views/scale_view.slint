@@ -6,66 +6,108 @@ export struct ScaleNoteItem {
     note: string,
 }
 
+export struct ScaleRowItem {
+    scale_name: string,
+    notes: [ScaleNoteItem],
+}
+
 export component ScaleView inherits VerticalBox {
     in-out property <[string]> available-roots: [];
     in-out property <[string]> available-scales: [];
     in-out property <string> selected-root: "C";
     in-out property <int> selected-scale-idx: 0;
     in-out property <[ScaleNoteItem]> scale-notes: [];
+    in-out property <bool> is-all-roots-mode: false;
+    in-out property <[ScaleRowItem]> all-scale-rows: [];
 
     callback update-scale();
 
-    spacing: 20px;
-
-    Text {
-        text: "Scale & Mode Explorer";
-        color: #f4f4f5;
-        font-size: 22px;
-        font-weight: 700;
-    }
+    spacing: 16px;
 
     HorizontalBox {
-        spacing: 50px;
-        alignment: start;
+        spacing: 30px;
+        alignment: space-between;
 
-        Rectangle {
-            width: 130px;
-            height: 55px;
-            VerticalBox {
-                spacing: 4px;
-                padding: 0px;
-                Text { text: "Root Note"; color: #a1a1aa; font-size: 12px; }
-                ComboBox {
-                    model: root.available-roots;
-                    current-value <=> root.selected-root;
-                    selected => { root.update-scale(); }
+        Text {
+            text: "Scale & Mode Explorer";
+            color: #f4f4f5;
+            font-size: 20px;
+            font-weight: 700;
+            vertical-alignment: center;
+        }
+
+        HorizontalBox {
+            spacing: 20px;
+            alignment: end;
+
+            Rectangle {
+                width: 150px;
+                height: 50px;
+                VerticalBox {
+                    spacing: 2px;
+                    padding: 0px;
+                    Text { text: "Root Note"; color: #a1a1aa; font-size: 11px; }
+                    ComboBox {
+                        model: root.available-roots;
+                        current-value <=> root.selected-root;
+                        selected => { root.update-scale(); }
+                    }
+                }
+            }
+
+            Rectangle {
+                width: 220px;
+                height: 50px;
+                VerticalBox {
+                    spacing: 2px;
+                    padding: 0px;
+                    Text { text: "Scale Type"; color: #a1a1aa; font-size: 11px; }
+                    ComboBox {
+                        model: root.available-scales;
+                        current-index <=> root.selected-scale-idx;
+                        selected => { root.update-scale(); }
+                    }
                 }
             }
         }
-
-        Rectangle {
-            width: 260px;
-            height: 55px;
-            VerticalBox {
-                spacing: 4px;
-                padding: 0px;
-                Text { text: "Scale Type"; color: #a1a1aa; font-size: 12px; }
-                ComboBox {
-                    model: root.available-scales;
-                    current-index <=> root.selected-scale-idx;
-                    selected => { root.update-scale(); }
-                }
-            }
-        }
     }
 
-    HorizontalBox {
-        spacing: 12px;
+    if !root.is-all-roots-mode: HorizontalBox {
+        spacing: 10px;
         alignment: start;
+        padding-top: 10px;
+        vertical-stretch: 1;
 
         for item in root.scale-notes: ScaleCard {
             degree: item.degree;
             note: item.note;
+        }
+    }
+
+    if root.is-all-roots-mode: Flickable {
+        vertical-stretch: 1;
+        VerticalBox {
+            spacing: 14px;
+            padding-top: 6px;
+            for row in root.all-scale-rows: VerticalBox {
+                spacing: 4px;
+                Text {
+                    text: row.scale_name;
+                    color: #38bdf8;
+                    font-size: 13px;
+                    font-weight: 600;
+                }
+                HorizontalBox {
+                    spacing: 6px;
+                    alignment: start;
+                    for note_item in row.notes: ScaleCard {
+                        width: 60px;
+                        height: 75px;
+                        degree: note_item.degree;
+                        note: note_item.note;
+                    }
+                }
+            }
         }
     }
 }
