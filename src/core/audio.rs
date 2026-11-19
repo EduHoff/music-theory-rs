@@ -1,56 +1,16 @@
 use crate::core::note::Note;
-use rodio::source::{SineWave, Source};
-use rodio::{DeviceSinkBuilder, Player};
 use std::str::FromStr;
-use std::sync::{Arc, Mutex};
-use std::time::Duration;
 
-pub struct AudioManager {
-    current_player: Arc<Mutex<Option<Player>>>,
+#[derive(Debug, Clone, Copy)]
+pub struct ScaleStep {
+    pub freq_hz: f32,
+    pub duration_ms: u64,
+    pub card_index: usize,
 }
 
-impl AudioManager {
-    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        Ok(Self {
-            current_player: Arc::new(Mutex::new(None)),
-        })
-    }
+pub struct AudioCalculator;
 
-    pub fn stop(&self) {
-        if let Ok(mut player_guard) = self.current_player.lock()
-            && let Some(player) = player_guard.take()
-        {
-            drop(player);
-        }
-    }
-
-    pub fn play_freq(&self, freq: f32, duration_ms: u64) {
-        self.stop();
-
-        let player_arc = Arc::clone(&self.current_player);
-
-        std::thread::spawn(move || {
-            let Ok(mut sink_handle) = DeviceSinkBuilder::open_default_sink() else {
-                return;
-            };
-            sink_handle.log_on_drop(false);
-
-            let player = Player::connect_new(sink_handle.mixer());
-
-            let source = SineWave::new(freq)
-                .take_duration(Duration::from_millis(duration_ms))
-                .amplify(0.20);
-
-            player.append(source);
-
-            if let Ok(mut player_guard) = player_arc.lock() {
-                *player_guard = Some(player);
-            }
-
-            std::thread::sleep(Duration::from_millis(duration_ms + 50));
-        });
-    }
-
+impl AudioCalculator {
     pub fn note_to_hz(note_str: &str) -> f32 {
         let clean = note_str
             .split('/')
@@ -101,92 +61,51 @@ impl AudioManager {
         base_hz * 2.0_f32.powf(diff_f32 / 12.0)
     }
 
-    pub fn play_scale_sequence<F>(&self, notes: Vec<String>, on_note_play: F)
-    where
-        F: Fn(Option<usize>) + Send + Sync + 'static,
-    {
-        self.stop();
+    /// Calcula toda a sequência de frequências e índices de cards (ida, oitava e volta)
+    pub fn build_scale_sequence(notes: &[String]) -> Vec<ScaleStep> {
+        let Some(first_note_str) = notes.first() else {
+            return Vec::new();
+        };
 
-        let callback = Arc::new(on_note_play);
+        let clean_root = first_note_str
+            .split('/')
+            .next()
+            .unwrap_or(first_note_str)
+            .trim();
+        let base_hz = Self::note_to_hz(clean_root);
 
-        std::thread::spawn(move || {
-            let Ok(mut sink_handle) = DeviceSinkBuilder::open_default_sink() else {
-                return;
-            };
-            sink_handle.log_on_drop(false);
+        let Ok(root_note) = Note::from_str(clean_root) else {
+            return Vec::new();
+        };
+        let root_semi = i32::from(root_note.semitone());
 
-            let player = Player::connect_new(sink_handle.mixer());
+        let mut sequence_indices = Vec::with_capacity(notes.len() * 2 + 1);
+        sequence_indices.extend(0..notes.len());
+        sequence_indices.push(0);
+        sequence_indices.extend((0..notes.len()).rev());
 
-            let Some(first_note_str) = notes.first() else {
-                return;
-            };
-
-            let clean_root = first_note_str
-                .split('/')
-                .next()
-                .unwrap_or(first_note_str)
-                .trim();
-            let base_hz = Self::note_to_hz(clean_root);
-
-            let Ok(root_note) = Note::from_str(clean_root) else {
-                return;
-            };
-
-            let root_semi = i32::from(root_note.semitone());
-
-            let mut sequence_indices = Vec::new();
-            for i in 0..notes.len() {
-                sequence_indices.push(i);
-            }
-            sequence_indices.push(0);
-            for i in (0..notes.len()).rev() {
-                sequence_indices.push(i);
-            }
-
-            let mut full_sequence = Vec::with_capacity(sequence_indices.len());
-            for &idx in &sequence_indices {
-                if let Some(note_str) = notes.get(idx) {
-                    full_sequence.push(note_str.clone());
-                }
-            }
-
-            for (step_idx, &note_idx) in sequence_indices.iter().enumerate() {
-                let Some(note_name) = full_sequence.get(step_idx) else {
-                    continue;
-                };
+        let mut steps = Vec::with_capacity(sequence_indices.len());
+        for (step_idx, &note_idx) in sequence_indices.iter().enumerate() {
+            if let Some(note_name) = notes.get(note_idx) {
                 let clean_note = note_name.split('/').next().unwrap_or(note_name).trim();
-
                 if let Ok(note) = Note::from_str(clean_note) {
                     let semitone = i32::from(note.semitone());
                     let semitone_diff = (semitone - root_semi).rem_euclid(12);
-
                     let octave_multiplier = if step_idx == notes.len() { 2.0 } else { 1.0 };
                     let diff_f32 = f32::from(u8::try_from(semitone_diff).unwrap_or(0));
 
-                    let freq = base_hz * octave_multiplier * 2.0_f32.powf(diff_f32 / 12.0);
+                    let freq_hz = base_hz * octave_multiplier * 2.0_f32.powf(diff_f32 / 12.0);
+                    let card_index = if note_idx >= notes.len() { 0 } else { note_idx };
 
-                    let source = SineWave::new(freq)
-                        .take_duration(Duration::from_millis(200))
-                        .amplify(0.20);
-
-                    player.append(source);
-
-                    let target_card_idx = if note_idx >= notes.len() { 0 } else { note_idx };
-                    let cb_clone = Arc::clone(&callback);
-                    let _ = slint::invoke_from_event_loop(move || {
-                        cb_clone(Some(target_card_idx));
+                    steps.push(ScaleStep {
+                        freq_hz,
+                        duration_ms: 200,
+                        card_index,
                     });
-
-                    std::thread::sleep(Duration::from_millis(220));
                 }
             }
+        }
 
-            let cb_clone = Arc::clone(&callback);
-            let _ = slint::invoke_from_event_loop(move || {
-                cb_clone(None);
-            });
-
-            player.sleep_until_end();
-        });
+        steps
     }
 }

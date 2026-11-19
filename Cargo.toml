@@ -20,6 +20,8 @@ slint = "1.18.1"
 wasm-bindgen = { version = "0.2" }
 js-sys = { version = "0.3" }
 slint = { version = "1.18.1", features = ["backend-winit", "renderer-femtovg"] }
+getrandom = { version = "0.4", features = ["wasm_js"] }
+rodio = { version = "0.23.0", features = ["wasm-bindgen"] }
 
 [build-dependencies]
 slint-build = "1.18.1"

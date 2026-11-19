@@ -74,25 +74,29 @@ export component ScaleView inherits VerticalBox {
             }
 
             Button {
-                text: "Play Scale 🔊";
+                text: "Play Scale";
                 clicked => { root.play-scale-sequence(); }
             }
         }
     }
 
-    if !root.is-all-roots-mode: HorizontalBox {
-        spacing: 10px;
-        alignment: start;
-        padding-top: 10px;
+    if !root.is-all-roots-mode: Flickable {
         vertical-stretch: 1;
+        content-width: root.scale-notes.length * 90px;
 
-        for item in root.scale-notes: ScaleCard {
-            degree: item.degree;
-            note: item.note;
-            is-active: item.is-active;
+        HorizontalBox {
+            spacing: 10px;
+            alignment: start;
+            padding-top: 10px;
 
-            TouchArea {
-                clicked => { root.play-note(item.note); }
+            for item in root.scale-notes: ScaleCard {
+                degree: item.degree;
+                note: item.note;
+                is-active: item.is-active;
+
+                TouchArea {
+                    clicked => { root.play-note(item.note); }
+                }
             }
         }
     }

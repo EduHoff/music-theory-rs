@@ -1,7 +1,8 @@
-use crate::core::audio::AudioManager;
-use slint::{ComponentHandle, Model};
+use crate::core::audio::AudioCalculator;
+use crate::core::audio_player::AudioPlayer;
+use slint::{ComponentHandle, Model, Timer};
 use std::error::Error;
-use std::sync::Arc;
+use std::time::Duration;
 
 slint::include_modules!();
 
@@ -12,9 +13,9 @@ pub fn run_app() -> Result<(), Box<dyn Error>> {
 
     scale_view::setup(&ui);
 
-    let audio_manager = Arc::new(AudioManager::new().expect("Failed to initialize AudioManager"));
+    let player = AudioPlayer::new();
 
-    let audio_note_mgr = Arc::clone(&audio_manager);
+    let player_note = player.clone();
     let ui_handle_note = ui.as_weak();
     ui.on_play_note(move |note_str| {
         let Some(ui) = ui_handle_note.upgrade() else {
@@ -25,8 +26,8 @@ pub fn run_app() -> Result<(), Box<dyn Error>> {
         let clean_note = note_str.to_string();
         let base_note = clean_note.split('/').next().unwrap_or(&clean_note).trim();
 
-        let hz = AudioManager::note_to_hz_relative(&current_root, base_note);
-        audio_note_mgr.play_freq(hz, 400);
+        let hz = AudioCalculator::note_to_hz_relative(&current_root, base_note);
+        player_note.play_freq(hz, 400);
 
         let notes_model = ui.get_scale_notes();
         for i in 0..notes_model.row_count() {
@@ -38,17 +39,14 @@ pub fn run_app() -> Result<(), Box<dyn Error>> {
                     notes_model.set_row_data(i, item);
 
                     let ui_weak = ui.as_weak();
-                    std::thread::spawn(move || {
-                        std::thread::sleep(std::time::Duration::from_millis(300));
-                        let _ = slint::invoke_from_event_loop(move || {
-                            if let Some(ui) = ui_weak.upgrade() {
-                                let model = ui.get_scale_notes();
-                                if let Some(mut reset_item) = model.row_data(i) {
-                                    reset_item.is_active = false;
-                                    model.set_row_data(i, reset_item);
-                                }
+                    Timer::single_shot(Duration::from_millis(300), move || {
+                        if let Some(ui) = ui_weak.upgrade() {
+                            let model = ui.get_scale_notes();
+                            if let Some(mut reset_item) = model.row_data(i) {
+                                reset_item.is_active = false;
+                                model.set_row_data(i, reset_item);
                             }
-                        });
+                        }
                     });
                     break;
                 }
@@ -56,7 +54,7 @@ pub fn run_app() -> Result<(), Box<dyn Error>> {
         }
     });
 
-    let audio_scale_mgr = Arc::clone(&audio_manager);
+    let player_scale = player;
     let ui_handle_scale = ui.as_weak();
     ui.on_play_scale_sequence(move || {
         let Some(ui) = ui_handle_scale.upgrade() else {
@@ -78,12 +76,13 @@ pub fn run_app() -> Result<(), Box<dyn Error>> {
             }
         }
 
-        if notes_vec.is_empty() {
+        let steps = AudioCalculator::build_scale_sequence(&notes_vec);
+        if steps.is_empty() {
             return;
         }
 
         let ui_weak = ui.as_weak();
-        audio_scale_mgr.play_scale_sequence(notes_vec, move |active_idx| {
+        player_scale.play_steps(steps, move |active_idx| {
             if let Some(ui) = ui_weak.upgrade() {
                 let model = ui.get_scale_notes();
                 for i in 0..model.row_count() {
