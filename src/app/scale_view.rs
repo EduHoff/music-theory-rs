@@ -15,16 +15,11 @@ const BASE_ROOTS: [&str; 15] = [
 
 fn format_chromatic_note(note_str: &str) -> String {
     match note_str {
-        "C#" => "C# / Db".to_string(),
-        "Db" => "C# / Db".to_string(),
-        "D#" => "D# / Eb".to_string(),
-        "Eb" => "D# / Eb".to_string(),
-        "F#" => "F# / Gb".to_string(),
-        "Gb" => "F# / Gb".to_string(),
-        "G#" => "G# / Ab".to_string(),
-        "Ab" => "G# / Ab".to_string(),
-        "A#" => "A# / Bb".to_string(),
-        "Bb" => "A# / Bb".to_string(),
+        "C#" | "Db" => "C# / Db".to_string(),
+        "D#" | "Eb" => "D# / Eb".to_string(),
+        "F#" | "Gb" => "F# / Gb".to_string(),
+        "G#" | "Ab" => "G# / Ab".to_string(),
+        "A#" | "Bb" => "A# / Bb".to_string(),
         other => other.to_string(),
     }
 }
@@ -94,6 +89,7 @@ pub fn setup(ui: &AppWindow) {
                         ScaleNoteItem {
                             degree: SharedString::from(degree),
                             note: SharedString::from(note_text),
+                            is_active: false,
                         }
                     })
                     .collect();
@@ -145,6 +141,7 @@ pub fn setup(ui: &AppWindow) {
                     ScaleNoteItem {
                         degree: SharedString::from(degree),
                         note: SharedString::from(note_text),
+                        is_active: false,
                     }
                 })
                 .collect();
@@ -154,7 +151,6 @@ pub fn setup(ui: &AppWindow) {
     };
 
     refresh();
-
     ui.on_update_scale(refresh);
 
     let ui_handle_nav = ui.as_weak();

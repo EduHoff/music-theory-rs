@@ -25,6 +25,8 @@ export component AppWindow inherits Window {
 
     callback update-scale();
     callback change-view(string);
+    callback play-note(string);
+        callback play-scale-sequence();
 
     VerticalBox {
         padding: 24px;
@@ -71,6 +73,8 @@ export component AppWindow inherits Window {
             is-all-roots-mode <=> root.is-all-roots-mode;
             all-scale-rows <=> root.all-scale-rows;
             update-scale => { root.update-scale(); }
+            play-note(note) => { root.play-note(note); }
+            play-scale-sequence => { root.play-scale-sequence(); }
         }
 
         if root.current-view == "circle": VerticalBox {

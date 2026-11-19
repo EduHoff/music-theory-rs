@@ -20,7 +20,9 @@ use wasm_bindgen::prelude::*;
 pub fn web_main() -> Result<(), JsValue> {
     let main_window = app::AppWindow::new().map_err(|e| JsValue::from_str(&e.to_string()))?;
     app::scale_view::setup(&main_window);
-    main_window.run().map_err(|e| JsValue::from_str(&e.to_string()))?;
+    main_window
+        .run()
+        .map_err(|e| JsValue::from_str(&e.to_string()))?;
 
     Ok(())
 }

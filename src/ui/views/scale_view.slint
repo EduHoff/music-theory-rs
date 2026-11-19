@@ -1,9 +1,10 @@
-import { ComboBox, VerticalBox, HorizontalBox } from "std-widgets.slint";
+import { ComboBox, VerticalBox, HorizontalBox, Button } from "std-widgets.slint";
 import { ScaleCard } from "../components/scale_card.slint";
 
 export struct ScaleNoteItem {
     degree: string,
     note: string,
+    is-active: bool,
 }
 
 export struct ScaleRowItem {
@@ -21,6 +22,8 @@ export component ScaleView inherits VerticalBox {
     in-out property <[ScaleRowItem]> all-scale-rows: [];
 
     callback update-scale();
+    callback play-note(string);
+    callback play-scale-sequence();
 
     spacing: 16px;
 
@@ -69,6 +72,11 @@ export component ScaleView inherits VerticalBox {
                     }
                 }
             }
+
+            Button {
+                text: "Play Scale 🔊";
+                clicked => { root.play-scale-sequence(); }
+            }
         }
     }
 
@@ -81,6 +89,11 @@ export component ScaleView inherits VerticalBox {
         for item in root.scale-notes: ScaleCard {
             degree: item.degree;
             note: item.note;
+            is-active: item.is-active;
+
+            TouchArea {
+                clicked => { root.play-note(item.note); }
+            }
         }
     }
 

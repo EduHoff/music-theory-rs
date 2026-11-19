@@ -80,6 +80,19 @@ impl Note {
 
         u8::try_from(total).ok().unwrap_or_default()
     }
+
+    pub fn to_hz(&self, octave: i32) -> f32 {
+        let semitone_u8 = self.semitone();
+        let semitone = i32::from(semitone_u8);
+
+        let c4_semitone = 0;
+        let semitones_from_c4 = (octave * 12 + semitone) - (4 * 12 + c4_semitone);
+
+        let semitones_i16 = i16::try_from(semitones_from_c4).unwrap_or(0);
+        let semitones_f32 = f32::from(semitones_i16);
+
+        261.63 * 2.0_f32.powf(semitones_f32 / 12.0)
+    }
 }
 
 impl FromStr for Note {
