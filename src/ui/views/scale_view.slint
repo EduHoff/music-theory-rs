@@ -13,6 +13,8 @@ export struct ScaleRowItem {
 }
 
 export component ScaleView inherits VerticalBox {
+    in property <bool> is-portrait;
+
     in-out property <[string]> available-roots: [];
     in-out property <[string]> available-scales: [];
     in-out property <string> selected-root: "C";
@@ -27,9 +29,11 @@ export component ScaleView inherits VerticalBox {
 
     spacing: 16px;
 
-    HorizontalBox {
+    if !root.is-portrait: HorizontalBox {
+        vertical-stretch: 0;
         spacing: 30px;
         alignment: space-between;
+        padding: 0;
 
         Text {
             text: "Scale & Mode Explorer";
@@ -42,12 +46,13 @@ export component ScaleView inherits VerticalBox {
         HorizontalBox {
             spacing: 20px;
             alignment: end;
+            padding: 0;
 
             Rectangle {
                 width: 150px;
                 height: 50px;
                 VerticalBox {
-                    spacing: 2px;
+                    spacing: 4px;
                     padding: 0px;
                     Text { text: "Root Note"; color: #a1a1aa; font-size: 11px; }
                     ComboBox {
@@ -62,7 +67,7 @@ export component ScaleView inherits VerticalBox {
                 width: 220px;
                 height: 50px;
                 VerticalBox {
-                    spacing: 2px;
+                    spacing: 4px;
                     padding: 0px;
                     Text { text: "Scale Type"; color: #a1a1aa; font-size: 11px; }
                     ComboBox {
@@ -73,7 +78,67 @@ export component ScaleView inherits VerticalBox {
                 }
             }
 
+            VerticalBox {
+                alignment: end;
+                padding: 0;
+                padding-bottom: 2px;
+                Button {
+                    height: 32px;
+                    text: "Play Scale";
+                    clicked => { root.play-scale-sequence(); }
+                }
+            }
+        }
+    }
+
+    if root.is-portrait: VerticalBox {
+        vertical-stretch: 0;
+        spacing: 20px;
+        padding: 0;
+        alignment: start;
+
+        Text {
+            text: "Scale & Mode Explorer";
+            color: #f4f4f5;
+            font-size: 20px;
+            font-weight: 700;
+            horizontal-alignment: center;
+        }
+
+        VerticalBox {
+            spacing: 16px;
+            padding: 0;
+
+            Rectangle {
+                height: 50px;
+                VerticalBox {
+                    spacing: 4px;
+                    padding: 0;
+                    Text { text: "Root Note"; color: #a1a1aa; font-size: 11px; }
+                    ComboBox {
+                        model: root.available-roots;
+                        current-value <=> root.selected-root;
+                        selected => { root.update-scale(); }
+                    }
+                }
+            }
+
+            Rectangle {
+                height: 50px;
+                VerticalBox {
+                    spacing: 4px;
+                    padding: 0;
+                    Text { text: "Scale Type"; color: #a1a1aa; font-size: 11px; }
+                    ComboBox {
+                        model: root.available-scales;
+                        current-index <=> root.selected-scale-idx;
+                        selected => { root.update-scale(); }
+                    }
+                }
+            }
+
             Button {
+                height: 44px;
                 text: "Play Scale";
                 clicked => { root.play-scale-sequence(); }
             }
@@ -82,7 +147,6 @@ export component ScaleView inherits VerticalBox {
 
     if !root.is-all-roots-mode: Flickable {
         vertical-stretch: 1;
-        content-width: root.scale-notes.length * 90px;
 
         HorizontalBox {
             spacing: 10px;
@@ -114,14 +178,20 @@ export component ScaleView inherits VerticalBox {
                     font-size: 13px;
                     font-weight: 600;
                 }
-                HorizontalBox {
-                    spacing: 6px;
-                    alignment: start;
-                    for note_item in row.notes: ScaleCard {
-                        width: 60px;
-                        height: 75px;
-                        degree: note_item.degree;
-                        note: note_item.note;
+
+                Flickable {
+                    content-width: row.notes.length * 66px;
+                    height: 75px;
+                    HorizontalBox {
+                        spacing: 6px;
+                        alignment: start;
+                        padding: 0;
+                        for note_item in row.notes: ScaleCard {
+                            width: 60px;
+                            height: 75px;
+                            degree: note_item.degree;
+                            note: note_item.note;
+                        }
                     }
                 }
             }

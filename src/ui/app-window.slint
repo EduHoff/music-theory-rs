@@ -3,14 +3,16 @@ import { ScaleView, ScaleNoteItem, ScaleRowItem } from "views/scale_view.slint";
 
 export component AppWindow inherits Window {
     title: "Music Theory RS";
-    preferred-width: 900px;
-    preferred-height: 600px;
-    min-width: 700px;
-    min-height: 450px;
     background: #18181b;
 
-    in-out property <string> current-view: "scales";
+    preferred-width: 900px;
+    preferred-height: 600px;
+    min-width: 320px;
+    min-height: 400px;
 
+    property <bool> is-portrait: root.width < 600px;
+
+    in-out property <string> current-view: "scales";
     in-out property <[string]> available-roots: [
         "C", "G", "D", "A", "E", "B", "F#", "C#",
         "F", "Bb", "Eb", "Ab", "Db", "Gb", "Cb"
@@ -19,78 +21,95 @@ export component AppWindow inherits Window {
     in-out property <string> selected-root: "C";
     in-out property <int> selected-scale-idx: 0;
     in-out property <[ScaleNoteItem]> scale-notes: [];
-    
+
     in-out property <bool> is-all-roots-mode: false;
     in-out property <[ScaleRowItem]> all-scale-rows: [];
 
     callback update-scale();
     callback change-view(string);
     callback play-note(string);
-        callback play-scale-sequence();
+    callback play-scale-sequence();
 
-    VerticalBox {
-        padding: 24px;
-        spacing: 20px;
+    Rectangle {
+        x: 0px;
+        y: 0px;
+        width: root.width;
+        height: root.height;
 
-        HorizontalBox {
-            spacing: 16px;
-            alignment: start;
+        VerticalBox {
+            width: parent.width;
+            height: parent.height;
 
-            Rectangle {
-                width: 140px;
-                height: 36px;
+            padding-top: root.safe-area-insets.top + 24px;
+            padding-bottom: root.safe-area-insets.bottom + 24px;
+            padding-left: root.safe-area-insets.left + 24px;
+            padding-right: root.safe-area-insets.right + 24px;
+
+            spacing: 20px;
+
+            if !root.is-portrait: HorizontalBox {
+                spacing: 16px;
+                alignment: start;
+                padding: 0;
+
                 Button {
                     width: 140px;
                     height: 36px;
                     text: "Scales Explorer";
                     clicked => { root.change-view("scales"); }
                 }
-            }
-
-            Rectangle {
-                width: 160px;
-                height: 36px;
                 Button {
                     width: 180px;
                     height: 36px;
-                    text: "Circle of Fifths/Fourths";
+                    text: "Circle of Fifths";
                     clicked => { root.change-view("circle"); }
                 }
             }
-        }
 
-        Rectangle {
-            height: 1px;
-            background: #27272a;
-        }
+            if root.is-portrait: VerticalBox {
+                spacing: 12px;
+                padding: 0;
 
-        if root.current-view == "scales": ScaleView {
-            available-roots: root.available-roots;
-            available-scales: root.available-scales;
-            selected-root <=> root.selected-root;
-            selected-scale-idx <=> root.selected-scale-idx;
-            scale-notes: root.scale-notes;
-            is-all-roots-mode <=> root.is-all-roots-mode;
-            all-scale-rows <=> root.all-scale-rows;
-            update-scale => { root.update-scale(); }
-            play-note(note) => { root.play-note(note); }
-            play-scale-sequence => { root.play-scale-sequence(); }
-        }
-
-        if root.current-view == "circle": VerticalBox {
-            alignment: center;
-            spacing: 10px;
-            Text {
-                text: "Circle of Fifths/Fourths Module";
-                color: #f4f4f5;
-                font-size: 20px;
-                horizontal-alignment: center;
+                Button {
+                    height: 44px;
+                    text: "Scales Explorer";
+                    clicked => { root.change-view("scales"); }
+                }
+                Button {
+                    height: 44px;
+                    text: "Circle of Fifths / Fourths";
+                    clicked => { root.change-view("circle"); }
+                }
             }
-            Text {
-                text: "Module under development...";
-                color: #71717a;
-                font-size: 14px;
-                horizontal-alignment: center;
+
+            Rectangle {
+                height: 1px;
+                background: #27272a;
+            }
+
+            if root.current-view == "scales": ScaleView {
+                is-portrait: root.is-portrait;
+                available-roots: root.available-roots;
+                available-scales: root.available-scales;
+                selected-root <=> root.selected-root;
+                selected-scale-idx <=> root.selected-scale-idx;
+                scale-notes: root.scale-notes;
+                is-all-roots-mode <=> root.is-all-roots-mode;
+                all-scale-rows <=> root.all-scale-rows;
+                update-scale => { root.update-scale(); }
+                play-note(note) => { root.play-note(note); }
+                play-scale-sequence => { root.play-scale-sequence(); }
+            }
+
+            if root.current-view == "circle": VerticalBox {
+                alignment: center;
+                spacing: 10px;
+                Text {
+                    text: "Circle of Fifths/Fourths Module";
+                    color: #f4f4f5;
+                    font-size: 20px;
+                    horizontal-alignment: center;
+                }
             }
         }
     }
