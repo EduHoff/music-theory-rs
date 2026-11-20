@@ -87,7 +87,6 @@ impl AudioPlayer {
             return;
         };
 
-        // Toca a primeira nota imediatamente no clique do usuário
         self.play_raw_tone(first.freq_hz, first.duration_ms);
         on_step(Some(first.card_index));
 

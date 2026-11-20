@@ -21,6 +21,7 @@ pub enum ScaleType {
     MinorPentatonic,
     Blues,
     Hirajoshi,
+    LydianDominant,
 }
 
 impl ScaleType {
@@ -44,6 +45,7 @@ impl ScaleType {
         ScaleType::MinorPentatonic,
         ScaleType::Blues,
         ScaleType::Hirajoshi,
+        ScaleType::LydianDominant,
     ];
 
     pub const fn name(&self) -> &'static str {
@@ -67,6 +69,7 @@ impl ScaleType {
             ScaleType::MinorPentatonic => "Minor Pentatonic",
             ScaleType::Blues => "Blues Scale",
             ScaleType::Hirajoshi => "Hirajoshi",
+            ScaleType::LydianDominant => "Lydian Dominant (Nordestina)",
         }
     }
 
@@ -91,6 +94,7 @@ impl ScaleType {
             ScaleType::MinorPentatonic => &[0, 3, 5, 7, 10],
             ScaleType::Blues => &[0, 3, 5, 6, 7, 10],
             ScaleType::Hirajoshi => &[0, 2, 3, 7, 8],
+            ScaleType::LydianDominant => &[0, 2, 4, 6, 7, 9, 10],
         }
     }
 
