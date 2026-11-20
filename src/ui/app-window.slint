@@ -1,5 +1,6 @@
 import { Button, VerticalBox, HorizontalBox } from "std-widgets.slint";
 import { ScaleView, ScaleNoteItem, ScaleRowItem } from "views/scale_view.slint";
+import { CircleView } from "views/circle_view.slint";
 
 export component AppWindow inherits Window {
     title: "Music Theory RS";
@@ -24,11 +25,15 @@ export component AppWindow inherits Window {
 
     in-out property <bool> is-all-roots-mode: false;
     in-out property <[ScaleRowItem]> all-scale-rows: [];
+    
+    in-out property <angle> circle-rotation: 0deg;
+        
 
     callback update-scale();
     callback change-view(string);
     callback play-note(string);
     callback play-scale-sequence();
+    callback circle-drag-event(float, float, float, float, bool);
 
     Rectangle {
         x: 0px;
@@ -101,14 +106,10 @@ export component AppWindow inherits Window {
                 play-scale-sequence => { root.play-scale-sequence(); }
             }
 
-            if root.current-view == "circle": VerticalBox {
-                alignment: center;
-                spacing: 10px;
-                Text {
-                    text: "Circle of Fifths/Fourths Module";
-                    color: #f4f4f5;
-                    font-size: 20px;
-                    horizontal-alignment: center;
+            if root.current-view == "circle": CircleView {
+                rotation-offset: root.circle-rotation;
+                drag-event(mx, my, cx, cy, pressed) => {
+                    root.circle-drag-event(mx, my, cx, cy, pressed);
                 }
             }
         }

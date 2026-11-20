@@ -1,0 +1,115 @@
+import { VerticalBox, HorizontalBox } from "std-widgets.slint";
+
+export struct KeyDef {
+    major: string,
+    minor: string,
+    accidental: string,
+}
+
+export component CircleView inherits VerticalBox {
+    spacing: 20px;
+
+    in-out property <angle> rotation-offset: 0deg;
+    callback drag-event(float, float, float, float, bool);
+
+    property <[KeyDef]> keys: [
+        { major: "C", minor: "A", accidental: "0" }, { major: "G", minor: "E", accidental: "1" },
+        { major: "D", minor: "B", accidental: "2" }, { major: "A", minor: "F#", accidental: "3" },
+        { major: "E", minor: "C#", accidental: "4" }, { major: "B", minor: "G#", accidental: "5" },
+        { major: "F#", minor: "D#", accidental: "6" }, { major: "Db", minor: "Bb", accidental: "5" },
+        { major: "Ab", minor: "F", accidental: "4" }, { major: "Eb", minor: "C", accidental: "3" },
+        { major: "Bb", minor: "G", accidental: "2" }, { major: "F", minor: "D", accidental: "1" },
+    ];
+
+    Text {
+        text: "Circle of Fifths and Fourths";
+        font-size: 24px; font-weight: 700; color: #f4f4f5; horizontal-alignment: center;
+    }
+
+    HorizontalBox {
+        alignment: center; spacing: 20px;
+        vertical-stretch: 0;
+        HorizontalBox {
+            spacing: 8px;
+            Rectangle { width: 16px; height: 16px; background: #f4f4f5; }
+            Text { text: "Major Scale"; color: #a1a1aa; vertical-alignment: center; }
+        }
+        HorizontalBox {
+            spacing: 8px;
+            Rectangle { width: 16px; height: 16px; background: #10b981; }
+            Text { text: "Minor Scale"; color: #a1a1aa; vertical-alignment: center; }
+        }
+    }
+
+    Rectangle {
+        vertical-stretch: 1;
+        horizontal-stretch: 1;
+
+        Rectangle {
+            property <length> s: min(parent.width, parent.height) * 0.85;
+            width: s;
+            height: s;
+            x: (parent.width - s) / 2;
+            y: (parent.height - s) / 2;
+
+            Rectangle {
+                width: 100%; height: 100%;
+                border-width: 2px; border-color: #3f3f46; border-radius: self.width / 2;
+            }
+
+            Rectangle {
+                width: 60%; height: 60%;
+                x: (parent.width - self.width) / 2; y: (parent.height - self.height) / 2;
+                border-width: 2px; border-color: #10b981; border-radius: self.width / 2;
+            }
+
+            Path {
+                width: 100%; height: 100%; stroke: #ef4444; stroke-width: 2px;
+                property <angle> ang: -75deg + root.rotation-offset;
+                property <length> r: parent.height * 0.55;
+                property <length> cx: parent.width / 2;
+                property <length> cy: parent.height / 2;
+                MoveTo { x: (cx + cos(ang) * r) / 1px; y: (cy + sin(ang) * r) / 1px; }
+                LineTo { x: (cx - cos(ang) * r) / 1px; y: (cy - sin(ang) * r) / 1px; }
+            }
+
+            for key[index] in keys: Rectangle {
+                width: 100%; height: 100%;
+
+                property <angle> ang: (index * 30deg) - 90deg + root.rotation-offset;
+                property <length> cx: parent.width / 2;
+                property <length> cy: parent.height / 2;
+
+                property <length> radius-major: parent.width * 0.40;
+                property <length> radius-minor: parent.width * 0.20;
+                property <length> radius-acc: parent.width * 0.55;
+
+                Text {
+                    text: key.major; font-size: 20px; font-weight: 700; color: #f4f4f5;
+                    x: cx + cos(ang) * radius-major - self.width/2;
+                    y: cy + sin(ang) * radius-major - self.height/2;
+                }
+                Text {
+                    text: key.minor; font-size: 16px; color: #10b981;
+                    x: cx + cos(ang) * radius-minor - self.width/2;
+                    y: cy + sin(ang) * radius-minor - self.height/2;
+                }
+                Text {
+                    text: key.accidental; font-size: 12px; color: #a1a1aa;
+                    x: cx + cos(ang) * radius-acc - self.width/2;
+                    y: cy + sin(ang) * radius-acc - self.height/2;
+                }
+            }
+
+            TouchArea {
+                width: 100%; height: 100%;
+                pointer-event(event) => {
+                    root.drag-event(self.mouse-x / 1px, self.mouse-y / 1px, parent.width / 2 / 1px, parent.height / 2 / 1px, self.pressed);
+                }
+                moved => {
+                    root.drag-event(self.mouse-x / 1px, self.mouse-y / 1px, parent.width / 2 / 1px, parent.height / 2 / 1px, self.pressed);
+                }
+            }
+        }
+    }
+}

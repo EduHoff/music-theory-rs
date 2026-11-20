@@ -61,7 +61,6 @@ impl AudioCalculator {
         base_hz * 2.0_f32.powf(diff_f32 / 12.0)
     }
 
-    /// Calcula toda a sequência de frequências e índices de cards (ida, oitava e volta)
     pub fn build_scale_sequence(notes: &[String]) -> Vec<ScaleStep> {
         let Some(first_note_str) = notes.first() else {
             return Vec::new();
