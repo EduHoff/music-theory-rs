@@ -10,7 +10,28 @@ export component CircleView inherits VerticalBox {
     spacing: 20px;
 
     in-out property <angle> rotation-offset: 0deg;
+    in-out property <string> active-note: "";
+
     callback drag-event(float, float, float, float, bool);
+    callback play-note(string);
+
+    Timer {
+        interval: 1.5s;
+        running: root.active-note != "";
+        triggered => { root.active-note = ""; }
+    }
+
+    pure function is-enharmonic(a: string, b: string) -> bool {
+        if (a == b) { return true; }
+        if ((a == "C#" && b == "Db") || (a == "Db" && b == "C#")) { return true; }
+        if ((a == "D#" && b == "Eb") || (a == "Eb" && b == "D#")) { return true; }
+        if ((a == "F#" && b == "Gb") || (a == "Gb" && b == "F#")) { return true; }
+        if ((a == "G#" && b == "Ab") || (a == "Ab" && b == "G#")) { return true; }
+        if ((a == "A#" && b == "Bb") || (a == "Bb" && b == "A#")) { return true; }
+        if ((a == "Cb" && b == "B") || (a == "B" && b == "Cb")) { return true; }
+        if ((a == "Fb" && b == "E") || (a == "E" && b == "Fb")) { return true; }
+        return false;
+    }
 
     property <[KeyDef]> keys: [
         { major: "C", minor: "A", accidental: "0" }, { major: "G", minor: "E", accidental: "1" },
@@ -47,21 +68,21 @@ export component CircleView inherits VerticalBox {
 
         Rectangle {
             property <length> s: min(parent.width, parent.height) * 0.85;
-            width: s;
-            height: s;
-            x: (parent.width - s) / 2;
-            y: (parent.height - s) / 2;
+            width: s; height: s;
+            x: (parent.width - s) / 2; y: (parent.height - s) / 2;
 
-            Rectangle {
+            TouchArea {
                 width: 100%; height: 100%;
-                border-width: 2px; border-color: #3f3f46; border-radius: self.width / 2;
+                pointer-event(event) => {
+                    root.drag-event(self.mouse-x / 1px, self.mouse-y / 1px, parent.width / 2 / 1px, parent.height / 2 / 1px, self.pressed);
+                }
+                moved => {
+                    root.drag-event(self.mouse-x / 1px, self.mouse-y / 1px, parent.width / 2 / 1px, parent.height / 2 / 1px, self.pressed);
+                }
             }
 
-            Rectangle {
-                width: 60%; height: 60%;
-                x: (parent.width - self.width) / 2; y: (parent.height - self.height) / 2;
-                border-width: 2px; border-color: #10b981; border-radius: self.width / 2;
-            }
+            Rectangle { width: 100%; height: 100%; border-width: 2px; border-color: #3f3f46; border-radius: self.width / 2; }
+            Rectangle { width: 60%; height: 60%; x: (parent.width - self.width) / 2; y: (parent.height - self.height) / 2; border-width: 2px; border-color: #10b981; border-radius: self.width / 2; }
 
             Path {
                 width: 100%; height: 100%; stroke: #ef4444; stroke-width: 2px;
@@ -79,35 +100,62 @@ export component CircleView inherits VerticalBox {
                 property <angle> ang: (index * 30deg) - 90deg + root.rotation-offset;
                 property <length> cx: parent.width / 2;
                 property <length> cy: parent.height / 2;
-
                 property <length> radius-major: parent.width * 0.40;
                 property <length> radius-minor: parent.width * 0.20;
                 property <length> radius-acc: parent.width * 0.55;
 
-                Text {
-                    text: key.major; font-size: 20px; font-weight: 700; color: #f4f4f5;
+                Rectangle {
+                    property <bool> is-active: is-enharmonic(root.active-note, key.major);
+                    width: 44px; height: 44px; border-radius: 22px;
                     x: cx + cos(ang) * radius-major - self.width/2;
                     y: cy + sin(ang) * radius-major - self.height/2;
+                    background: is-active ? #0284c7 : transparent;
+                    border-color: is-active ? #38bdf8 : transparent;
+                    border-width: is-active ? 2px : 0px;
+                    animate background { duration: 150ms; }
+                    animate border-color { duration: 150ms; }
+
+                    Text {
+                        width: 100%; height: 100%; horizontal-alignment: center; vertical-alignment: center;
+                        text: key.major; font-size: 20px; font-weight: 700;
+                        color: is-active ? #ffffff : #f4f4f5;
+                    }
+                    TouchArea {
+                        clicked => {
+                            root.active-note = key.major;
+                            root.play-note(key.major);
+                        }
+                    }
                 }
-                Text {
-                    text: key.minor; font-size: 16px; color: #10b981;
+
+                Rectangle {
+                    property <bool> is-active: is-enharmonic(root.active-note, key.minor);
+                    width: 36px; height: 36px; border-radius: 18px;
                     x: cx + cos(ang) * radius-minor - self.width/2;
                     y: cy + sin(ang) * radius-minor - self.height/2;
+                    background: is-active ? #0284c7 : transparent;
+                    border-color: is-active ? #38bdf8 : transparent;
+                    border-width: is-active ? 2px : 0px;
+                    animate background { duration: 150ms; }
+                    animate border-color { duration: 150ms; }
+
+                    Text {
+                        width: 100%; height: 100%; horizontal-alignment: center; vertical-alignment: center;
+                        text: key.minor; font-size: 16px;
+                        color: is-active ? #ffffff : #10b981;
+                    }
+                    TouchArea {
+                        clicked => {
+                            root.active-note = key.minor;
+                            root.play-note(key.minor);
+                        }
+                    }
                 }
+
                 Text {
                     text: key.accidental; font-size: 12px; color: #a1a1aa;
                     x: cx + cos(ang) * radius-acc - self.width/2;
                     y: cy + sin(ang) * radius-acc - self.height/2;
-                }
-            }
-
-            TouchArea {
-                width: 100%; height: 100%;
-                pointer-event(event) => {
-                    root.drag-event(self.mouse-x / 1px, self.mouse-y / 1px, parent.width / 2 / 1px, parent.height / 2 / 1px, self.pressed);
-                }
-                moved => {
-                    root.drag-event(self.mouse-x / 1px, self.mouse-y / 1px, parent.width / 2 / 1px, parent.height / 2 / 1px, self.pressed);
                 }
             }
         }

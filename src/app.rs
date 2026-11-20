@@ -13,6 +13,7 @@ pub fn run_app() -> Result<(), Box<dyn Error>> {
     let ui = AppWindow::new()?;
 
     scale_view::setup(&ui);
+    circle_view::setup(&ui);
 
     let player = AudioPlayer::new();
 
