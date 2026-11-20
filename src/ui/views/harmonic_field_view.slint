@@ -1,0 +1,118 @@
+import { Button, VerticalBox, HorizontalBox, ComboBox, ScrollView } from "std-widgets.slint";
+
+export struct ChordItem {
+    degree: string,
+    chord-name: string,
+    notes-string: string,
+}
+
+export struct HarmonicRowItem {
+    root: string,
+    chords: [ChordItem],
+}
+
+export component HarmonicFieldView inherits Rectangle {
+    in property <bool> is-portrait;
+    in property <[string]> available-roots;
+    in property <[string]> available-scales;
+
+    in-out property <string> selected-root;
+    in-out property <int> selected-scale-idx;
+
+    in property <[ChordItem]> chords;
+    in property <bool> is-all-mode;
+    in property <[HarmonicRowItem]> all-rows;
+
+    callback update-field();
+    callback play-chord(string);
+
+    VerticalBox {
+        spacing: 20px;
+
+        HorizontalBox {
+            spacing: 16px;
+            alignment: start;
+
+            ComboBox {
+                width: 120px;
+                model: root.available-roots;
+                current-value: root.selected-root;
+                selected(value) => {
+                    root.selected-root = value;
+                    root.update-field();
+                }
+            }
+
+            ComboBox {
+                width: 220px;
+                model: root.available-scales;
+                current-index: root.selected-scale-idx;
+                selected => {
+                    root.selected-scale-idx = self.current-index;
+                    root.update-field();
+                }
+            }
+        }
+
+        ScrollView {
+            VerticalBox {
+                alignment: start;
+                padding: 0;
+
+                if !root.is-all-mode: HorizontalBox {
+                    alignment: start;
+                    spacing: 16px;
+
+                    for chord in root.chords: Rectangle {
+                        width: 140px;
+                        height: 120px;
+                        background: #27272a;
+                        border-radius: 8px;
+
+                        VerticalBox {
+                            alignment: space-around;
+                            padding: 12px;
+                            Text { text: chord.degree; color: #a1a1aa; horizontal-alignment: center; font-size: 14px; }
+                            Text { text: chord.chord-name; font-size: 22px; color: white; horizontal-alignment: center; font-weight: 700; }
+                            Text { text: chord.notes-string; color: #a1a1aa; font-size: 12px; horizontal-alignment: center; }
+                        }
+                    }
+                }
+
+                if root.is-all-mode: VerticalBox {
+                    spacing: 16px;
+                    alignment: start;
+
+                    for row in root.all-rows: HorizontalBox {
+                        spacing: 16px;
+                        alignment: start;
+
+                        Text {
+                            text: row.root;
+                            font-size: 20px;
+                            color: white;
+                            font-weight: 700;
+                            vertical-alignment: center;
+                            width: 40px;
+                        }
+
+                        for chord in row.chords: Rectangle {
+                            width: 110px;
+                            height: 100px;
+                            background: #27272a;
+                            border-radius: 8px;
+
+                            VerticalBox {
+                                alignment: space-around;
+                                padding: 8px;
+                                Text { text: chord.degree; color: #a1a1aa; horizontal-alignment: center; font-size: 12px;}
+                                Text { text: chord.chord-name; font-size: 17px; color: white; horizontal-alignment: center; font-weight: 700; }
+                                Text { text: chord.notes-string; color: #a1a1aa; font-size: 10px; horizontal-alignment: center; }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

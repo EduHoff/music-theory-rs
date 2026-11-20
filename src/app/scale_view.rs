@@ -28,7 +28,7 @@ pub fn setup(ui: &AppWindow) {
     let ui_handle = ui.as_weak();
 
     let mut roots: Vec<SharedString> = BASE_ROOTS.iter().map(|s| SharedString::from(*s)).collect();
-    roots.push(SharedString::from("All (All Roots)"));
+    roots.push(SharedString::from("All"));
     ui.set_available_roots(ModelRc::from(Rc::new(VecModel::from(roots))));
 
     let scale_names: Vec<SharedString> = ScaleType::ALL

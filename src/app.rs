@@ -7,6 +7,7 @@ use std::time::Duration;
 slint::include_modules!();
 
 pub mod circle_view;
+pub mod harmonic_field_view;
 pub mod scale_view;
 
 pub fn run_app() -> Result<(), Box<dyn Error>> {
@@ -14,6 +15,7 @@ pub fn run_app() -> Result<(), Box<dyn Error>> {
 
     scale_view::setup(&ui);
     circle_view::setup(&ui);
+    harmonic_field_view::setup(&ui);
 
     let player = AudioPlayer::new();
 

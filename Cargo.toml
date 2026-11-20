@@ -33,6 +33,11 @@ lto = true
 [package.metadata.android]
 package = "com.eduhoff.musictheoryrs"
 apk_name = "MusicTheoryRS"
+resources = "res"
+
+[package.metadata.android.application]
+label = "Music Theory"
+icon = "@drawable/ic_launcher"
 
 [package.metadata.android.sdk]
 min_sdk_version = 26

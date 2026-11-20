@@ -1,9 +1,11 @@
 import { Button, VerticalBox, HorizontalBox } from "std-widgets.slint";
 import { ScaleView, ScaleNoteItem, ScaleRowItem } from "views/scale_view.slint";
 import { CircleView } from "views/circle_view.slint";
+import { HarmonicFieldView, ChordItem, HarmonicRowItem } from "views/harmonic_field_view.slint";
 
 export component AppWindow inherits Window {
-    title: "Music Theory RS";
+    title: "Music Theory";
+    icon: @image-url("../../assets/music-theory-rs.png");
     background: #18181b;
 
     preferred-width: 900px;
@@ -14,22 +16,29 @@ export component AppWindow inherits Window {
     property <bool> is-portrait: root.width < 600px;
 
     in-out property <string> current-view: "scales";
+    
     in-out property <[string]> available-roots: [
-        "C", "G", "D", "A", "E", "B", "F#", "C#",
+        "All Roots", "C", "G", "D", "A", "E", "B", "F#", "C#",
         "F", "Bb", "Eb", "Ab", "Db", "Gb", "Cb"
     ];
-    in-out property <[string]> available-scales: [];
     in-out property <string> selected-root: "C";
+    
+    in-out property <[string]> available-scales: [];
     in-out property <int> selected-scale-idx: 0;
     in-out property <[ScaleNoteItem]> scale-notes: [];
-
     in-out property <bool> is-all-roots-mode: false;
     in-out property <[ScaleRowItem]> all-scale-rows: [];
-    
+
+    in-out property <[string]> available-harmonic-scales: [];
+    in-out property <int> selected-harmonic-scale-idx: 0;
+    in-out property <[ChordItem]> harmonic-chords: [];
+    in-out property <bool> is-all-harmonic-mode: false;
+    in-out property <[HarmonicRowItem]> all-harmonic-rows: [];
+
     in-out property <angle> circle-rotation: 0deg;
-        
 
     callback update-scale();
+    callback update-harmonic-field();
     callback change-view(string);
     callback play-note(string);
     callback play-scale-sequence();
@@ -64,6 +73,12 @@ export component AppWindow inherits Window {
                     clicked => { root.change-view("scales"); }
                 }
                 Button {
+                    width: 140px;
+                    height: 36px;
+                    text: "Harmonic Field";
+                    clicked => { root.change-view("harmonic"); }
+                }
+                Button {
                     width: 180px;
                     height: 36px;
                     text: "Circle of Fifths";
@@ -79,6 +94,11 @@ export component AppWindow inherits Window {
                     height: 44px;
                     text: "Scales Explorer";
                     clicked => { root.change-view("scales"); }
+                }
+                Button {
+                    height: 44px;
+                    text: "Harmonic Field";
+                    clicked => { root.change-view("harmonic"); }
                 }
                 Button {
                     height: 44px;
@@ -112,6 +132,21 @@ export component AppWindow inherits Window {
                     root.circle-drag-event(mx, my, cx, cy, pressed);
                 }
                 play-note(note) => { root.play-note(note); }
+            }
+
+            if root.current-view == "harmonic": HarmonicFieldView {
+                is-portrait: root.is-portrait;
+                available-roots: root.available-roots;
+                
+                available-scales: root.available-harmonic-scales;
+                selected-scale-idx <=> root.selected-harmonic-scale-idx;
+                is-all-mode <=> root.is-all-harmonic-mode;
+                all-rows: root.all-harmonic-rows;
+                chords: root.harmonic-chords;
+                
+                selected-root <=> root.selected-root;
+                update-field => { root.update-harmonic-field(); }
+                play-chord(name) => { /* SOON */ }
             }
         }
     }
