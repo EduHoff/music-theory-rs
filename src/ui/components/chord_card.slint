@@ -1,0 +1,49 @@
+import { VerticalBox } from "std-widgets.slint";
+
+export component ChordCard inherits Rectangle {
+    in property <string> degree;
+    in property <string> chord-name;
+    in property <string> notes-string;
+    in property <bool> is-active: false;
+    in property <bool> compact: false;
+
+    callback clicked();
+
+    width: root.compact ? 110px : 140px;
+    height: root.compact ? 100px : 120px;
+    background: root.is-active ? #0284c7 : #27272a;
+    border-radius: 8px;
+    border-width: root.is-active ? 2px : 1px;
+    border-color: root.is-active ? #38bdf8 : #3f3f46;
+    animate background { duration: 100ms; }
+    animate border-color { duration: 100ms; }
+
+    VerticalBox {
+        alignment: space-around;
+        padding: root.compact ? 8px : 12px;
+
+        Text {
+            text: root.degree;
+            color: root.is-active ? #ffffff : #a1a1aa;
+            horizontal-alignment: center;
+            font-size: root.compact ? 12px : 14px;
+        }
+        Text {
+            text: root.chord-name;
+            font-size: root.compact ? 17px : 22px;
+            color: white;
+            horizontal-alignment: center;
+            font-weight: 700;
+        }
+        Text {
+            text: root.notes-string;
+            color: root.is-active ? #e0f2fe : #a1a1aa;
+            font-size: root.compact ? 10px : 12px;
+            horizontal-alignment: center;
+        }
+    }
+
+    TouchArea {
+        clicked => { root.clicked(); }
+    }
+}

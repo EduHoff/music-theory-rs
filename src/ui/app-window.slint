@@ -1,7 +1,8 @@
-import { Button, VerticalBox, HorizontalBox } from "std-widgets.slint";
+import { VerticalBox } from "std-widgets.slint";
 import { ScaleView, ScaleNoteItem, ScaleRowItem } from "views/scale_view.slint";
 import { CircleView } from "views/circle_view.slint";
 import { HarmonicFieldView, ChordItem, HarmonicRowItem } from "views/harmonic_field_view.slint";
+import { Navbar } from "components/navbar.slint";
 
 export component AppWindow inherits Window {
     title: "Music Theory";
@@ -16,13 +17,10 @@ export component AppWindow inherits Window {
     property <bool> is-portrait: root.width < 600px;
 
     in-out property <string> current-view: "scales";
-    
-    in-out property <[string]> available-roots: [
-        "All Roots", "C", "G", "D", "A", "E", "B", "F#", "C#",
-        "F", "Bb", "Eb", "Ab", "Db", "Gb", "Cb"
-    ];
-    in-out property <string> selected-root: "C";
-    
+
+    in-out property <[string]> available-roots: [];
+    in-out property <string> selected-root: "";
+
     in-out property <[string]> available-scales: [];
     in-out property <int> selected-scale-idx: 0;
     in-out property <[ScaleNoteItem]> scale-notes: [];
@@ -43,6 +41,8 @@ export component AppWindow inherits Window {
     callback play-note(string);
     callback play-scale-sequence();
     callback circle-drag-event(float, float, float, float, bool);
+    callback play-chord(int, string);
+    callback play-harmonic-sequence();
 
     Rectangle {
         x: 0px;
@@ -61,58 +61,20 @@ export component AppWindow inherits Window {
 
             spacing: 20px;
 
-            if !root.is-portrait: HorizontalBox {
-                spacing: 16px;
-                alignment: start;
-                padding: 0;
-
-                Button {
-                    width: 140px;
-                    height: 36px;
-                    text: "Scales Explorer";
-                    clicked => { root.change-view("scales"); }
+            Navbar {
+                is-portrait: root.is-portrait;
+                navigate(view) => {
+                    root.change-view(view);
+                    if view == "scales" {
+                        root.update-scale();
+                    } else if view == "harmonic" {
+                        root.update-harmonic-field();
+                    }
                 }
-                Button {
-                    width: 140px;
-                    height: 36px;
-                    text: "Harmonic Field";
-                    clicked => { root.change-view("harmonic"); }
-                }
-                Button {
-                    width: 180px;
-                    height: 36px;
-                    text: "Circle of Fifths";
-                    clicked => { root.change-view("circle"); }
-                }
-            }
-
-            if root.is-portrait: VerticalBox {
-                spacing: 12px;
-                padding: 0;
-
-                Button {
-                    height: 44px;
-                    text: "Scales Explorer";
-                    clicked => { root.change-view("scales"); }
-                }
-                Button {
-                    height: 44px;
-                    text: "Harmonic Field";
-                    clicked => { root.change-view("harmonic"); }
-                }
-                Button {
-                    height: 44px;
-                    text: "Circle of Fifths / Fourths";
-                    clicked => { root.change-view("circle"); }
-                }
-            }
-
-            Rectangle {
-                height: 1px;
-                background: #27272a;
             }
 
             if root.current-view == "scales": ScaleView {
+                vertical-stretch: 1;
                 is-portrait: root.is-portrait;
                 available-roots: root.available-roots;
                 available-scales: root.available-scales;
@@ -127,6 +89,7 @@ export component AppWindow inherits Window {
             }
 
             if root.current-view == "circle": CircleView {
+                vertical-stretch: 1;
                 rotation-offset: root.circle-rotation;
                 drag-event(mx, my, cx, cy, pressed) => {
                     root.circle-drag-event(mx, my, cx, cy, pressed);
@@ -135,18 +98,42 @@ export component AppWindow inherits Window {
             }
 
             if root.current-view == "harmonic": HarmonicFieldView {
+                vertical-stretch: 1;
                 is-portrait: root.is-portrait;
                 available-roots: root.available-roots;
-                
                 available-scales: root.available-harmonic-scales;
                 selected-scale-idx <=> root.selected-harmonic-scale-idx;
                 is-all-mode <=> root.is-all-harmonic-mode;
                 all-rows: root.all-harmonic-rows;
                 chords: root.harmonic-chords;
-                
                 selected-root <=> root.selected-root;
                 update-field => { root.update-harmonic-field(); }
-                play-chord(name) => { /* SOON */ }
+                play-chord(idx, notes) => { root.play-chord(idx, notes); }
+                play-harmonic-sequence => { root.play-harmonic-sequence(); }
+            }
+
+            if root.current-view == "metronome": Rectangle {
+                vertical-stretch: 1;
+
+                VerticalBox {
+                    alignment: center;
+                    spacing: 8px;
+
+                    Text {
+                        text: "Metronome";
+                        color: #f4f4f5;
+                        font-size: 24px;
+                        font-weight: 700;
+                        horizontal-alignment: center;
+                    }
+
+                    Text {
+                        text: "Coming Soon";
+                        color: #a1a1aa;
+                        font-size: 16px;
+                        horizontal-alignment: center;
+                    }
+                }
             }
         }
     }

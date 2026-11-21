@@ -1,5 +1,5 @@
 import { ComboBox, VerticalBox, HorizontalBox, Button } from "std-widgets.slint";
-import { ScaleCard } from "../components/scale_card.slint";
+import { NoteCard } from "../components/note_card.slint";
 
 export struct ScaleNoteItem {
     degree: string,
@@ -17,17 +17,30 @@ export component ScaleView inherits VerticalBox {
 
     in-out property <[string]> available-roots: [];
     in-out property <[string]> available-scales: [];
-    in-out property <string> selected-root: "C";
+    in-out property <string> selected-root: "";
     in-out property <int> selected-scale-idx: 0;
     in-out property <[ScaleNoteItem]> scale-notes: [];
     in-out property <bool> is-all-roots-mode: false;
     in-out property <[ScaleRowItem]> all-scale-rows: [];
 
+    property <int> active-all-row: -1;
+    property <int> active-all-col: -1;
+
     callback update-scale();
     callback play-note(string);
     callback play-scale-sequence();
 
+    padding: 0;
     spacing: 16px;
+
+    Timer {
+        interval: 350ms;
+        running: root.active-all-row >= 0;
+        triggered => {
+            root.active-all-row = -1;
+            root.active-all-col = -1;
+        }
+    }
 
     if !root.is-portrait: HorizontalBox {
         vertical-stretch: 0;
@@ -78,7 +91,7 @@ export component ScaleView inherits VerticalBox {
                 }
             }
 
-            VerticalBox {
+            if !root.is-all-roots-mode: VerticalBox {
                 alignment: end;
                 padding: 0;
                 padding-bottom: 2px;
@@ -137,7 +150,7 @@ export component ScaleView inherits VerticalBox {
                 }
             }
 
-            Button {
+            if !root.is-all-roots-mode: Button {
                 height: 44px;
                 text: "Play Scale";
                 clicked => { root.play-scale-sequence(); }
@@ -149,11 +162,14 @@ export component ScaleView inherits VerticalBox {
         vertical-stretch: 1;
 
         HorizontalBox {
+            y: 0px;
+            height: self.preferred-height;
             spacing: 10px;
             alignment: start;
+            padding: 0;
             padding-top: 10px;
 
-            for item in root.scale-notes: ScaleCard {
+            for item in root.scale-notes: NoteCard {
                 degree: item.degree;
                 note: item.note;
                 is-active: item.is-active;
@@ -168,10 +184,14 @@ export component ScaleView inherits VerticalBox {
     if root.is-all-roots-mode: Flickable {
         vertical-stretch: 1;
         VerticalBox {
+            y: 0px;
+            height: self.preferred-height;
             spacing: 14px;
+            padding: 0;
             padding-top: 6px;
-            for row in root.all-scale-rows: VerticalBox {
+            for row[row_idx] in root.all-scale-rows: VerticalBox {
                 spacing: 4px;
+                padding: 0;
                 Text {
                     text: row.scale_name;
                     color: #38bdf8;
@@ -186,11 +206,20 @@ export component ScaleView inherits VerticalBox {
                         spacing: 6px;
                         alignment: start;
                         padding: 0;
-                        for note_item in row.notes: ScaleCard {
+                        for note_item[col_idx] in row.notes: NoteCard {
                             width: 60px;
                             height: 75px;
                             degree: note_item.degree;
                             note: note_item.note;
+                            is-active: root.active-all-row == row_idx && root.active-all-col == col_idx;
+
+                            TouchArea {
+                                clicked => {
+                                    root.active-all-row = row_idx;
+                                    root.active-all-col = col_idx;
+                                    root.play-note(note_item.note);
+                                }
+                            }
                         }
                     }
                 }

@@ -67,6 +67,7 @@ pub fn setup(ui: &AppWindow) {
                             .collect::<Vec<_>>()
                             .join("-"),
                     ),
+                    is_active: false,
                 })
                 .collect()
         };

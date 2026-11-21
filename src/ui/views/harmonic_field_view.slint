@@ -1,9 +1,11 @@
 import { Button, VerticalBox, HorizontalBox, ComboBox, ScrollView } from "std-widgets.slint";
+import { ChordCard } from "../components/chord_card.slint";
 
 export struct ChordItem {
     degree: string,
     chord-name: string,
     notes-string: string,
+    is-active: bool,
 }
 
 export struct HarmonicRowItem {
@@ -11,7 +13,7 @@ export struct HarmonicRowItem {
     chords: [ChordItem],
 }
 
-export component HarmonicFieldView inherits Rectangle {
+export component HarmonicFieldView inherits VerticalBox {
     in property <bool> is-portrait;
     in property <[string]> available-roots;
     in property <[string]> available-scales;
@@ -23,92 +25,138 @@ export component HarmonicFieldView inherits Rectangle {
     in property <bool> is-all-mode;
     in property <[HarmonicRowItem]> all-rows;
 
+    property <int> active-all-row: -1;
+    property <int> active-all-col: -1;
+
     callback update-field();
-    callback play-chord(string);
+    callback play-chord(int, string);
+    callback play-harmonic-sequence();
 
-    VerticalBox {
-        spacing: 20px;
+    padding: 0;
+    spacing: 20px;
 
-        HorizontalBox {
-            spacing: 16px;
-            alignment: start;
+    Timer {
+        interval: 550ms;
+        running: root.active-all-row >= 0;
+        triggered => {
+            root.active-all-row = -1;
+            root.active-all-col = -1;
+        }
+    }
 
-            ComboBox {
-                width: 120px;
-                model: root.available-roots;
-                current-value: root.selected-root;
-                selected(value) => {
-                    root.selected-root = value;
-                    root.update-field();
-                }
-            }
+    if !root.is-portrait: HorizontalBox {
+        vertical-stretch: 0;
+        spacing: 16px;
+        alignment: start;
+        padding: 0;
 
-            ComboBox {
-                width: 220px;
-                model: root.available-scales;
-                current-index: root.selected-scale-idx;
-                selected => {
-                    root.selected-scale-idx = self.current-index;
-                    root.update-field();
-                }
+        ComboBox {
+            width: 120px;
+            model: root.available-roots;
+            current-value: root.selected-root;
+            selected(value) => {
+                root.selected-root = value;
+                root.update-field();
             }
         }
 
-        ScrollView {
-            VerticalBox {
+        ComboBox {
+            width: 220px;
+            model: root.available-scales;
+            current-index: root.selected-scale-idx;
+            selected => {
+                root.selected-scale-idx = self.current-index;
+                root.update-field();
+            }
+        }
+
+        if !root.is-all-mode: Button {
+            height: 32px;
+            text: "Play Field";
+            clicked => { root.play-harmonic-sequence(); }
+        }
+    }
+
+    if root.is-portrait: VerticalBox {
+        vertical-stretch: 0;
+        spacing: 12px;
+        padding: 0;
+
+        ComboBox {
+            model: root.available-roots;
+            current-value: root.selected-root;
+            selected(value) => {
+                root.selected-root = value;
+                root.update-field();
+            }
+        }
+
+        ComboBox {
+            model: root.available-scales;
+            current-index: root.selected-scale-idx;
+            selected => {
+                root.selected-scale-idx = self.current-index;
+                root.update-field();
+            }
+        }
+
+        if !root.is-all-mode: Button {
+            height: 44px;
+            text: "Play Field";
+            clicked => { root.play-harmonic-sequence(); }
+        }
+    }
+
+    ScrollView {
+        vertical-stretch: 1;
+
+        VerticalBox {
+            alignment: start;
+            padding: 0;
+
+            if !root.is-all-mode: HorizontalBox {
+                alignment: start;
+                spacing: 16px;
+                padding: 0;
+
+                for chord[index] in root.chords: ChordCard {
+                    degree: chord.degree;
+                    chord-name: chord.chord-name;
+                    notes-string: chord.notes-string;
+                    is-active: chord.is-active;
+                    clicked => { root.play-chord(index, chord.notes-string); }
+                }
+            }
+
+            if root.is-all-mode: VerticalBox {
+                spacing: 16px;
                 alignment: start;
                 padding: 0;
 
-                if !root.is-all-mode: HorizontalBox {
-                    alignment: start;
+                for row[row_idx] in root.all-rows: HorizontalBox {
                     spacing: 16px;
+                    alignment: start;
+                    padding: 0;
 
-                    for chord in root.chords: Rectangle {
-                        width: 140px;
-                        height: 120px;
-                        background: #27272a;
-                        border-radius: 8px;
-
-                        VerticalBox {
-                            alignment: space-around;
-                            padding: 12px;
-                            Text { text: chord.degree; color: #a1a1aa; horizontal-alignment: center; font-size: 14px; }
-                            Text { text: chord.chord-name; font-size: 22px; color: white; horizontal-alignment: center; font-weight: 700; }
-                            Text { text: chord.notes-string; color: #a1a1aa; font-size: 12px; horizontal-alignment: center; }
-                        }
+                    Text {
+                        text: row.root;
+                        font-size: 20px;
+                        color: white;
+                        font-weight: 700;
+                        vertical-alignment: center;
+                        width: 40px;
                     }
-                }
 
-                if root.is-all-mode: VerticalBox {
-                    spacing: 16px;
-                    alignment: start;
-
-                    for row in root.all-rows: HorizontalBox {
-                        spacing: 16px;
-                        alignment: start;
-
-                        Text {
-                            text: row.root;
-                            font-size: 20px;
-                            color: white;
-                            font-weight: 700;
-                            vertical-alignment: center;
-                            width: 40px;
-                        }
-
-                        for chord in row.chords: Rectangle {
-                            width: 110px;
-                            height: 100px;
-                            background: #27272a;
-                            border-radius: 8px;
-
-                            VerticalBox {
-                                alignment: space-around;
-                                padding: 8px;
-                                Text { text: chord.degree; color: #a1a1aa; horizontal-alignment: center; font-size: 12px;}
-                                Text { text: chord.chord-name; font-size: 17px; color: white; horizontal-alignment: center; font-weight: 700; }
-                                Text { text: chord.notes-string; color: #a1a1aa; font-size: 10px; horizontal-alignment: center; }
-                            }
+                    for chord[col_idx] in row.chords: ChordCard {
+                        compact: true;
+                        degree: chord.degree;
+                        chord-name: chord.chord-name;
+                        notes-string: chord.notes-string;
+                        is-active: root.active-all-row == row_idx && root.active-all-col == col_idx;
+                        clicked => {
+                            root.active-all-row = row_idx;
+                            root.active-all-col = col_idx;
+                            root.play-chord(-1, chord.notes-string);
                         }
                     }
                 }

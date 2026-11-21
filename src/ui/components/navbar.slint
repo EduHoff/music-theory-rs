@@ -1,0 +1,66 @@
+import { Button, VerticalBox, HorizontalBox } from "std-widgets.slint";
+
+export component Navbar inherits VerticalBox {
+    in property <bool> is-portrait;
+    vertical-stretch: 0;
+    padding: 0;
+
+    callback navigate(string);
+
+    if !root.is-portrait: HorizontalBox {
+        spacing: 16px;
+        alignment: start;
+        padding: 0;
+
+        Button {
+            width: 140px;
+            height: 36px;
+            text: "Scales Explorer";
+            clicked => { root.navigate("scales"); }
+        }
+        Button {
+            width: 140px;
+            height: 36px;
+            text: "Harmonic Field";
+            clicked => { root.navigate("harmonic"); }
+        }
+        Button {
+            width: 180px;
+            height: 36px;
+            text: "Circle of Fifths";
+            clicked => { root.navigate("circle"); }
+        }
+        Button {
+            width: 140px;
+            height: 36px;
+            text: "Metronome";
+            clicked => { root.navigate("metronome"); }
+        }
+    }
+
+    if root.is-portrait: VerticalBox {
+        spacing: 12px;
+        padding: 0;
+
+        Button {
+            height: 44px;
+            text: "Scales Explorer";
+            clicked => { root.navigate("scales"); }
+        }
+        Button {
+            height: 44px;
+            text: "Harmonic Field";
+            clicked => { root.navigate("harmonic"); }
+        }
+        Button {
+            height: 44px;
+            text: "Circle of Fifths / Fourths";
+            clicked => { root.navigate("circle"); }
+        }
+        Button {
+            height: 44px;
+            text: "Metronome";
+            clicked => { root.navigate("metronome"); }
+        }
+    }
+}

@@ -45,7 +45,7 @@ pub fn setup(ui: &AppWindow) {
         let scale_idx = ui.get_selected_scale_idx();
         let scale_type = ScaleType::from_index(scale_idx);
 
-        if root_str == "All (All Roots)" {
+        if root_str == "All" {
             ui.set_is_all_roots_mode(true);
 
             let mut all_rows = Vec::new();

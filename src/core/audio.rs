@@ -8,6 +8,13 @@ pub struct ScaleStep {
     pub card_index: usize,
 }
 
+#[derive(Debug, Clone)]
+pub struct ChordStep {
+    pub freqs_hz: Vec<f32>,
+    pub duration_ms: u64,
+    pub card_index: usize,
+}
+
 pub struct AudioCalculator;
 
 impl AudioCalculator {
@@ -33,6 +40,22 @@ impl AudioCalculator {
             "B" => 493.88,
             _ => 440.00,
         }
+    }
+
+    pub fn chord_to_hz(notes_str: &str) -> Vec<f32> {
+        let notes: Vec<&str> = notes_str
+            .split(|c: char| c == '-' || c == ',' || c.is_whitespace())
+            .filter(|s| !s.is_empty())
+            .collect();
+
+        let Some(&root_str) = notes.first() else {
+            return Vec::new();
+        };
+
+        notes
+            .iter()
+            .map(|&note| Self::note_to_hz_relative(root_str, note))
+            .collect()
     }
 
     pub fn note_to_hz_relative(root_str: &str, target_note_str: &str) -> f32 {
@@ -106,5 +129,17 @@ impl AudioCalculator {
         }
 
         steps
+    }
+
+    pub fn build_harmonic_sequence(chords_notes: &[String]) -> Vec<ChordStep> {
+        chords_notes
+            .iter()
+            .enumerate()
+            .map(|(idx, notes_str)| ChordStep {
+                freqs_hz: Self::chord_to_hz(notes_str),
+                duration_ms: 650,
+                card_index: idx,
+            })
+            .collect()
     }
 }

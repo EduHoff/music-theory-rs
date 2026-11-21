@@ -1,4 +1,4 @@
-use crate::core::audio::ScaleStep;
+use crate::core::audio::{ChordStep, ScaleStep};
 use rodio::source::{SineWave, Source};
 use rodio::{DeviceSinkBuilder, MixerDeviceSink, Player};
 use slint::{Timer, TimerMode};
@@ -62,6 +62,35 @@ impl AudioPlayer {
         }
     }
 
+    fn play_raw_chord(&self, freqs: &[f32], duration_ms: u64) {
+        if freqs.is_empty() || !self.ensure_engine() {
+            return;
+        }
+        if let Some(engine) = self.engine.borrow().as_ref() {
+            engine.player.clear();
+
+            let count = u16::try_from(freqs.len()).unwrap_or(u16::MAX);
+            let gain = 0.25 / f32::from(count);
+            let mut mixed: Option<Box<dyn Source<Item = f32> + Send>> = None;
+
+            for &freq in freqs {
+                let wave = SineWave::new(freq)
+                    .take_duration(Duration::from_millis(duration_ms))
+                    .amplify(gain);
+
+                mixed = Some(match mixed {
+                    Some(acc) => Box::new(acc.mix(wave)),
+                    None => Box::new(wave),
+                });
+            }
+
+            if let Some(source) = mixed {
+                engine.player.append(source);
+                engine.player.play();
+            }
+        }
+    }
+
     pub fn stop(&self) {
         if let Some(timer) = self.sequence_timer.borrow_mut().take() {
             timer.stop();
@@ -75,6 +104,11 @@ impl AudioPlayer {
     pub fn play_freq(&self, freq: f32, duration_ms: u64) {
         self.stop();
         self.play_raw_tone(freq, duration_ms);
+    }
+
+    pub fn play_chord(&self, freqs: &[f32], duration_ms: u64) {
+        self.stop();
+        self.play_raw_chord(freqs, duration_ms);
     }
 
     pub fn play_steps<F>(&self, steps: Vec<ScaleStep>, on_step: F)
@@ -101,6 +135,44 @@ impl AudioPlayer {
             if *idx < total_steps {
                 if let Some(step) = steps.get(*idx) {
                     player_clone.play_raw_tone(step.freq_hz, step.duration_ms);
+                    on_step(Some(step.card_index));
+                }
+                *idx += 1;
+            } else {
+                on_step(None);
+                if let Some(t) = timer_holder.borrow_mut().take() {
+                    t.stop();
+                }
+            }
+        });
+
+        *self.sequence_timer.borrow_mut() = Some(timer);
+    }
+
+    pub fn play_chord_steps<F>(&self, steps: Vec<ChordStep>, on_step: F)
+    where
+        F: Fn(Option<usize>) + 'static,
+    {
+        self.stop();
+
+        let Some(first) = steps.first() else {
+            return;
+        };
+
+        self.play_raw_chord(&first.freqs_hz, first.duration_ms);
+        on_step(Some(first.card_index));
+
+        let current_step = Rc::new(RefCell::new(1_usize));
+        let total_steps = steps.len();
+        let player_clone = self.clone();
+        let timer_holder = Rc::clone(&self.sequence_timer);
+        let timer = Timer::default();
+
+        timer.start(TimerMode::Repeated, Duration::from_millis(700), move || {
+            let mut idx = current_step.borrow_mut();
+            if *idx < total_steps {
+                if let Some(step) = steps.get(*idx) {
+                    player_clone.play_raw_chord(&step.freqs_hz, step.duration_ms);
                     on_step(Some(step.card_index));
                 }
                 *idx += 1;

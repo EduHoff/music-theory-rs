@@ -58,7 +58,7 @@ pub fn run_app() -> Result<(), Box<dyn Error>> {
         }
     });
 
-    let player_scale = player;
+    let player_scale = player.clone();
     let ui_handle_scale = ui.as_weak();
     ui.on_play_scale_sequence(move || {
         let Some(ui) = ui_handle_scale.upgrade() else {
@@ -89,6 +89,74 @@ pub fn run_app() -> Result<(), Box<dyn Error>> {
         player_scale.play_steps(steps, move |active_idx| {
             if let Some(ui) = ui_weak.upgrade() {
                 let model = ui.get_scale_notes();
+                for i in 0..model.row_count() {
+                    if let Some(mut item) = model.row_data(i) {
+                        let should_be_active = Some(i) == active_idx;
+                        if item.is_active != should_be_active {
+                            item.is_active = should_be_active;
+                            model.set_row_data(i, item);
+                        }
+                    }
+                }
+            }
+        });
+    });
+
+    let player_chord = player.clone();
+    let ui_handle_chord = ui.as_weak();
+    ui.on_play_chord(move |card_idx, notes_str| {
+        let Some(ui) = ui_handle_chord.upgrade() else {
+            return;
+        };
+
+        let freqs = AudioCalculator::chord_to_hz(&notes_str);
+        player_chord.play_chord(&freqs, 600);
+
+        if let Ok(idx) = usize::try_from(card_idx) {
+            let chords_model = ui.get_harmonic_chords();
+            if let Some(mut item) = chords_model.row_data(idx) {
+                item.is_active = true;
+                chords_model.set_row_data(idx, item);
+
+                let ui_weak = ui.as_weak();
+                Timer::single_shot(Duration::from_millis(550), move || {
+                    if let Some(ui) = ui_weak.upgrade() {
+                        let model = ui.get_harmonic_chords();
+                        if let Some(mut reset_item) = model.row_data(idx) {
+                            reset_item.is_active = false;
+                            model.set_row_data(idx, reset_item);
+                        }
+                    }
+                });
+            }
+        }
+    });
+
+    let player_harmonic = player;
+    let ui_handle_harmonic = ui.as_weak();
+    ui.on_play_harmonic_sequence(move || {
+        let Some(ui) = ui_handle_harmonic.upgrade() else {
+            return;
+        };
+
+        let chords_model = ui.get_harmonic_chords();
+        let mut chords_notes = Vec::new();
+
+        for i in 0..chords_model.row_count() {
+            if let Some(item) = chords_model.row_data(i) {
+                chords_notes.push(item.notes_string.to_string());
+            }
+        }
+
+        let steps = AudioCalculator::build_harmonic_sequence(&chords_notes);
+        if steps.is_empty() {
+            return;
+        }
+
+        let ui_weak = ui.as_weak();
+        player_harmonic.play_chord_steps(steps, move |active_idx| {
+            if let Some(ui) = ui_weak.upgrade() {
+                let model = ui.get_harmonic_chords();
                 for i in 0..model.row_count() {
                     if let Some(mut item) = model.row_data(i) {
                         let should_be_active = Some(i) == active_idx;
